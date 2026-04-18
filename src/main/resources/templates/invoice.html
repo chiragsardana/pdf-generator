@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8" />
+
+    <style>
+        @page {
+            size: A5;
+            margin: 8mm;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 10px;
+            color: #000;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        td,
+        th {
+            padding: 0;
+        }
+
+        th {
+            font-size: 9px;
+        }
+
+        .right {
+            text-align: right;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .bold {
+            font-weight: bold;
+        }
+
+        .small {
+            font-size: 9px;
+        }
+
+        .grand {
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .line {
+            border-top: 1px dashed #000;
+            margin: 4px 0;
+        }
+
+        /* ✅ IMPORTANT FOR MULTI PAGE */
+        thead {
+            display: table-header-group;
+        }
+
+        tfoot {
+            display: table-footer-group;
+        }
+
+        tr {
+            page-break-inside: avoid;
+        }
+    </style>
+</head>
+
+<body>
+
+    <table th:with="hasGst=${items != null and !#lists.isEmpty(items.?[gstRate != null and gstRate != 0])}">
+
+        <!-- ================= HEADER (REPEATS EVERY PAGE) ================= -->
+        <thead>
+
+            <!-- COMPANY HEADER -->
+            <tr>
+                <td colspan="9">
+                    <table>
+                        <tr>
+                            <td style="width:75%; vertical-align: top;">
+                                <div style="font-size: 20px; font-weight: bold; line-height: 1.1;"
+                                    th:text="${companyName}">
+                                </div>
+                            </td>
+
+                            <td style="width:45%; text-align: right; vertical-align: top; font-size: 10px;">
+                                <div th:text="${companyAddress}"></div>
+                                <div th:text="${companyPhone}"></div>
+                                <div th:text="${companyEmail}"></div>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <div class="line"></div>
+
+                    <!-- INVOICE DETAILS -->
+                    <table>
+                        <tr>
+                            <td><b>Invoice:</b> <span th:text="${invoiceNumber}"></span></td>
+                            <td class="right"><b>Date:</b> <span th:text="${date}"></span></td>
+                        </tr>
+                        <tr>
+                            <td><b>Customer:</b> <span th:text="${customerName}"></span></td>
+                            <td class="right"><b>Phone:</b> <span th:text="${customerPhone}"></span></td>
+                        </tr>
+                        <tr>
+                            <td><b>Payment:</b> <span th:text="${paymentMethod}"></span></td>
+                            <td class="right"><b>Ref:</b> <span th:text="${paymentReference}"></span></td>
+                        </tr>
+                    </table>
+
+                    <div class="line"></div>
+                </td>
+            </tr>
+
+            <!-- COLUMN HEADER -->
+            <tr>
+                <th>Sr</th>
+                <th>Item</th>
+                <th class="right">Qty</th>
+                <th class="right">Details</th>
+                <th class="right">Price</th>
+                <th class="right">Disc</th>
+                <th class="right" th:if="${hasGst}">GST%</th>
+                <th class="right" th:if="${hasGst}">Price+GST</th>
+                <th class="right">Amount</th>
+            </tr>
+
+            <tr>
+                <td colspan="9">
+                    <div class="line"></div>
+                </td>
+            </tr>
+
+        </thead>
+
+        <!-- ================= BODY ================= -->
+        <tbody>
+
+            <tr th:each="item, stat : ${items}">
+                <td th:text="${stat.count}+${indexCount}"></td>
+
+                <td>
+                    <div th:text="${item.name + '#' + item.itemId}"></div>
+                </td>
+
+                <td class="right" th:text="${item.qty}"></td>
+                <td class="right" th:text="${item.qtyDetails}"></td>
+                <td class="right" th:text="${item.price}"></td>
+                <td class="right" th:text="${item.discount}"></td>
+
+                <td class="right" th:if="${hasGst}" th:text="${item.gstRate}"></td>
+                <td class="right" th:if="${hasGst}" th:text="${item.priceAndGstRate}"></td>
+
+                <td class="right" th:text="${item.amount}"></td>
+            </tr>
+
+        </tbody>
+
+        <!-- ================= FOOTER (LAST PAGE ONLY) ================= -->
+        <tfoot>
+
+            <tr>
+                <td colspan="9">
+                    <div class="line"></div>
+
+                    <table>
+                        <tr th:if="${subtotal != null 
+                            and !#strings.isEmpty(subtotal) 
+                            and subtotal != 'null' 
+                            and T(java.lang.Double).parseDouble(subtotal) > 0}">
+                            <td>Item Total (Before GST)</td>
+                            <td class="right" th:text="${subtotal}"></td>
+                        </tr>
+
+                        <tr th:if="${gstTotal != null 
+                            and !#strings.isEmpty(gstTotal) 
+                            and gstTotal != 'null' 
+                            and T(java.lang.Double).parseDouble(gstTotal) > 0}">
+                            <td>GST Total</td>
+                            <td class="right" th:text="${gstTotal}"></td>
+                        </tr>
+
+                        <tr class="grand">
+                            <td
+                                th:if="${total != null and total != '0.0' and total != '0' and !#strings.contains(total, 'Page')}">
+                                Total</td>
+                            <td class="right" th:text="${total}"></td>
+                        </tr>
+                    </table>
+
+                    <div class="line"></div>
+
+                    <div class="center">
+                        Thank you for shopping with us.
+                    </div>
+                </td>
+            </tr>
+
+        </tfoot>
+
+    </table>
+
+</body>
+
+</html>
