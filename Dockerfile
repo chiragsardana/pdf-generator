@@ -1,8 +1,26 @@
-FROM openjdk:17-jdk-slim
+# -------- Stage 1: Build the application --------
+FROM maven:3.9.9-eclipse-temurin-17 AS builder
 
 WORKDIR /app
 
-COPY target/*.jar app.jar
+# Copy only pom.xml first (for dependency caching)
+COPY pom.xml .
+RUN mvn dependency:go-offline
+
+# Copy full source code
+COPY src ./src
+
+# Build the jar
+RUN mvn clean package -DskipTests
+
+
+# -------- Stage 2: Run the application --------
+FROM eclipse-temurin:17-jdk-jammy
+
+WORKDIR /app
+
+# Copy jar from builder stage
+COPY --from=builder /app/target/*.jar app.jar
 
 EXPOSE 8080
 
