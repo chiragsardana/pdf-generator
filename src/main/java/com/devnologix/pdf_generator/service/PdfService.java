@@ -70,9 +70,55 @@ public class PdfService {
 
         if (pageSize.equals("A4")) {
             System.out.println("This is running");
-            return onePagePdf(invoiceNumber, invoiceDate, invoiceCustomerName, invoiceCustomerPhone,
-                    invoicePaymentMethod, invoicePayementReference, invoiceTotalbeforegst, invoiceGstTotal,
-                    invoiceTotal, items, invoiceIndexCount);
+            itemMaxSize = 48;
+
+            // return onePagePdf(invoiceNumber, invoiceDate, invoiceCustomerName, invoiceCustomerPhone,
+            //         invoicePaymentMethod, invoicePayementReference, invoiceTotalbeforegst, invoiceGstTotal,
+            //         invoiceTotal, items, invoiceIndexCount);
+
+                    Integer loopCount = (itemsSize) / itemMaxSize;
+            Boolean boolCheck = itemsSize % itemMaxSize == 0;
+
+            
+            /* */
+            List<byte[]> pdfmerge = new ArrayList<>();
+            Integer start = 0;
+            Integer end = itemMaxSize;
+
+
+            Boolean lastThree = itemsSize % itemMaxSize < 4;
+            if (val1 && lastThree){
+                // GST SUbtotal Exists
+                // itemSize for the last page need to be reduced so that new page created
+                if(boolCheck){
+                    boolCheck = !boolCheck;
+                    end = itemMaxSize - (itemsSize % itemMaxSize) - 1;
+                    itemMaxSize = end;
+                }
+            }
+
+
+            for (int i = 0; i < loopCount; i++) {
+
+                byte[] temppdf = onePagePdf(invoiceNumber, invoiceDate, invoiceCustomerName, invoiceCustomerPhone,
+                        invoicePaymentMethod, invoicePaymentMethod,
+                        (i == loopCount - 1 && boolCheck) ? invoiceTotalbeforegst : "0",
+                        (i == loopCount - 1 && boolCheck) ? invoiceGstTotal : "0",
+                        (i == loopCount - 1 && boolCheck) ? invoiceTotal : "Page No. " + (i + 1),
+                        items.subList(start, end), invoiceIndexCount);
+                start = start + itemMaxSize;
+                end = end + itemMaxSize;
+                end = Math.min(end, itemsSize);
+                pdfmerge.add(temppdf);
+                invoiceIndexCount = invoiceIndexCount + itemMaxSize;
+            }
+            if (!boolCheck) {
+                byte[] temppdf = onePagePdf(invoiceNumber, invoiceDate, invoiceCustomerName, invoiceCustomerPhone,
+                        invoicePaymentMethod, invoicePaymentMethod, invoiceTotalbeforegst, invoiceGstTotal,
+                        invoiceTotal, items.subList(start, end), invoiceIndexCount);
+                pdfmerge.add(temppdf);
+            }
+            return mergePdfs(pdfmerge);
         } else if (itemsSize <= itemMaxSize && !val) {
             System.out.println("This is running");
             return onePagePdf(invoiceNumber, invoiceDate, invoiceCustomerName, invoiceCustomerPhone,
